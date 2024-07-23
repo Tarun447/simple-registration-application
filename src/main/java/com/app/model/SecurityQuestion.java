@@ -15,7 +15,7 @@ public class SecurityQuestion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private int id;
+    private int qId;
     private String question;
     private String answer;
 

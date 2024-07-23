@@ -22,6 +22,12 @@ public class User {
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name="qId")
-    private SecurityQuestion question;
+    private SecurityQuestion securityQuestion;
 
+    public User(String username, String email, String password, SecurityQuestion question) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.securityQuestion = question;
+    }
 }
