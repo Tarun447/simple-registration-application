@@ -17,10 +17,8 @@ public class SecurityQuestion {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int qId;
     private String question;
-    private String answer;
 
-    public SecurityQuestion(String question, String answer) {
+    public SecurityQuestion(String question) {
         this.question = question;
-        this.answer = answer;
     }
 }

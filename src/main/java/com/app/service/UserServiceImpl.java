@@ -1,11 +1,18 @@
 package com.app.service;
 
+import com.app.dto.ForgetPasswordDto;
+import com.app.dto.ResetPasswordDto;
 import com.app.dto.UserDto;
+import com.app.dto.UserLoginDto;
+import com.app.exception.PasswordNotMatchException;
+import com.app.exception.UserAlreadyPresentException;
+import com.app.exception.UserNotFoundException;
 import com.app.model.SecurityQuestion;
 import com.app.model.User;
+import com.app.repository.SecurityQuestionRepository;
 import com.app.repository.UserRepository;
+import com.app.validation.PasswordMatcher;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,65 +24,86 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private UserRepository repo;
 
+    @Autowired
+    private SecurityQuestionRepository service;
+
+    @Autowired
+    private PasswordMatcher matcher;
+
 
 
     @Override
-    public User saveUser(UserDto userDto) throws Exception {
-        if(userDto!=null||userDto.getUsername()!="")
-        {
-            if(userDto.getPassword().equals(userDto.getConfirmPassword()))
+    public String saveUser(UserDto userDto) throws Exception {
+
+        String str="";
+
+           User us = repo.findByUsername(userDto.getUsername());
+            if(us!=null)
             {
-                User user = new User(userDto.getUsername(),userDto.getEmail(),userDto.getPassword(),
-                        new SecurityQuestion(userDto.getQuestion(),userDto.getAnswer()));
-                user = repo.save(user);
-                return user;
-            }else{
-                throw new RuntimeException("Passwod is not valid.");
+               throw new UserAlreadyPresentException(userDto.getUsername()+"is already present in the db..username should be unique..");
             }
-        }else {
-           throw new Exception("Please send valid Data ");
-        }
+            else {
+
+                   if(matcher.isValidPassword(userDto.getPassword()))
+                   {
+                       SecurityQuestion sc = service.findByQuestion(userDto.getQuestion());
+                       User  user = new User(userDto.getUsername().toLowerCase(),userDto.getPassword(),sc.getQId(),userDto.getAnswer());
+                       repo.save(user);
+                       return "Registration Successfully..";
+                   }else {
+                       throw  new PasswordNotMatchException("password have at least 1 Upper Case ,1 Lower Case,1 number and 1 special " +
+                               "char in (!@#$%^&*)");
+                   }
+
+            }
+
+    }
+
+
+
+
+    @Override
+    public ForgetPasswordDto forgetPasswordbyId(int id) throws Exception{
+        User user = repo.findById(id).orElseThrow(()->new Exception("please enter valid userId"));
+        int qId = user.getQId();
+        SecurityQuestion securityQuestion = service.findById(qId).orElseThrow(() -> new Exception("Invalid Question Id,Please contact with you Administration"));
+        return new ForgetPasswordDto(qId,securityQuestion.getQuestion());
     }
 
     @Override
-    public List<User> getAllUser() {
-        return repo.findAll();
-    }
-
-    @Override
-    public User findUserById(int id) throws Exception {
-        User user = repo.findById(id).orElseThrow(() -> new RuntimeException("User not found with this id.."));
-        return user;
-    }
-
-    @Override
-    public String deleteUserById(int id) throws Exception {
-        User user = repo.findById(id).orElseThrow(() -> new RuntimeException("User not found with this id.."));
-        repo.delete(user);
-        return "User Record has been deleted with this id : "+id;
-    }
-
-    @Override
-    public User updateUser(UserDto dto) throws Exception {
-        if(dto!=null||dto.getUsername()!=""|| dto.getId()==0||dto.getQId()==0)
+    public String resetById(ResetPasswordDto dto, int id) throws Exception {
+        User user = repo.findById(id).orElseThrow(()->new Exception("please enter valid userId"));
+        if(user.getQId()==dto.getQId() && user.getAnswer().equals(dto.getAnswer()))
         {
-            User user = repo.findById(dto.getId()).orElseThrow(()->new RuntimeException("User not found with this id"));
-            if(dto.getPassword().equals(dto.getConfirmPassword()))
+            if(matcher.isValidPassword(dto.getPassword()))
             {
-                user.setUsername(dto.getUsername());
-                user.setEmail(dto.getEmail());
                 user.setPassword(dto.getPassword());
-                SecurityQuestion sc = user.getSecurityQuestion();
-                sc.setQuestion(dto.getQuestion());
-                sc.setAnswer(dto.getAnswer());
-                user.setSecurityQuestion(sc);
-                return repo.save(user);
-            }else{
-                throw new RuntimeException("Passwod is not valid.");
+                repo.save(user);
+                return "Reset Password Successful";
+            }
+            else {
+                throw  new PasswordNotMatchException("password have at least 1 Upper Case ,1 Lower Case,1 number and 1 special " +
+                        "char in (!@#$%^&*)");
             }
         }else {
-            throw new Exception("Please send valid User Record ");
+            throw  new Exception("Invalid Answer");
         }
+
+    }
+
+
+    @Override
+    public String login(UserLoginDto dto) throws Exception {
+        User user = repo.findById(dto.getId()).orElseThrow(()->new Exception("invalid credential"));
+        if(user.getPassword().equals(dto.getPassword()))
+        {
+            return "Login Success";
+        }else {
+            throw new Exception("Invalid credential");
+        }
+
+
+
     }
 
 

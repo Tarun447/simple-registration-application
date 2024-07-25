@@ -16,18 +16,17 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int id;
+    @Column(unique = true)
     private String username;
-    private String email;
     private String password;
+    private String answer;
+    private int qId;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name="qId")
-    private SecurityQuestion securityQuestion;
 
-    public User(String username, String email, String password, SecurityQuestion question) {
+    public User(String username, String password,int qId,String answer) {
         this.username = username;
-        this.email = email;
         this.password = password;
-        this.securityQuestion = question;
+        this.qId = qId;
+        this.answer=answer;
     }
 }

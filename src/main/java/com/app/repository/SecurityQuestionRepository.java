@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface SecurityQuestionRepository extends JpaRepository <SecurityQuestion,Integer>{
 
-    public SecurityQuestion findByQuestion(String question);
+    public SecurityQuestion findByQuestion(String question) throws Exception;
 }

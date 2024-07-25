@@ -1,43 +1,42 @@
 package com.app.dto;
 
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
-//@AllArgsConstructor
+@AllArgsConstructor
 @NoArgsConstructor
 @Data
 public class UserDto {
     private int id;
+
+
+    @NotEmpty(message = "username  can't be empty")
+    @Size(min=8,message="user name length should be 8 char long and not space allowed")
     private String username;
-    private String email;
+
+
+    @NotEmpty(message = "Password can't be empty")
+    @Size(min= 8,message = "password should be at least 8 characters long")
     private String password;
-    private String confirmPassword;
-    private int qId;
+
+
     private String question;
+
+    @NotEmpty(message = "answer can't be empty")
+    @Size(min=3,message = "answer should be at least 3 char long")
     private String answer;
 
-    public UserDto(int id, String username, String email, String password, int qId, String question, String answer) {
-        this.id = id;
+    public UserDto(String username, String password,  String question, String answer) {
         this.username = username;
-        this.email = email;
         this.password = password;
-        this.qId = qId;
         this.question = question;
         this.answer = answer;
     }
-
-    public UserDto(String username, String email, String password, String confirmPassword, String question, String answer) {
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.confirmPassword = confirmPassword;
-        this.question = question;
-        this.answer = answer;
-    }
-
-
 }
